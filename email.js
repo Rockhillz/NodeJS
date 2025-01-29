@@ -1,25 +1,45 @@
+const express = require("express");
 const nodemailer = require("nodemailer");
-// console.log(nodemailer)
+const app = express();
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
+// Middleware to parse JSON request bodies
+app.use(express.json());
+// cors
+const cors = require("cors");
+app.use(cors());
+
+require('dotenv').config();
+
+app.post("/api/send-email", (req, res) => {
+  const { name, email, subject, message } = req.body;
+
+  const transporter = nodemailer.createTransport({
+    service: "gmail", // Or other SMTP service
     auth: {
-        user: 'izuchi.alaneme@gmail.com',
-        pass: 'fjzp fspn cprx wwqu'
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD,
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL,
+    to: "izuchukwualaneme@gmail.com",
+    subject: subject,
+    text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log("Error: " + error);
+      res.status(500).json({ success: false, message: "Failed to send email. Try again later." });
+    } else {
+      res.status(200).json({ success: true, message: "Message sent successfully!" });
+      
     }
+  });
 });
 
-const mailOptions = {
-    from: 'izuchi.alaneme@gmail.com',
-    to: 'izuchukwualaneme@gmail.com, husseinimudiking@gmail.com, belloayoola20@gmail.com',
-    subject: 'Sending Email using Node.js From IzuCodes',
-    text: 'It was not easy at first. But finally found my APP PASSWORD. So This is my Mail using Node Js 😍😍👌!'
-};
-
-transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-        console.log(error);
-    } else {
-        console.log('Email sent: ' + info.response);
-    }
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
